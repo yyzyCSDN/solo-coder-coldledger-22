@@ -18,6 +18,12 @@ class ContainerLedger:
         self._rows: list[Entry] = []
         self._refs: set[tuple[str, str]] = set()
         self._lock = RLock()
+        self.lock = self._lock  # public alias for coordinated multi-store commits
+
+    def has_reference(self, account: str, reference: str) -> bool:
+        """Locked idempotency check, safe to call while already holding the ledger lock."""
+        with self._lock:
+            return (account, reference) in self._refs
 
     def post(self, account: str, reference: str, quantity, reason: str) -> Entry:
         q = Decimal(str(quantity))

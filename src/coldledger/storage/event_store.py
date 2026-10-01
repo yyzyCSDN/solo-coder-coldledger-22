@@ -4,7 +4,10 @@ from threading import RLock
 class Event:
     stream:str; sequence:int; kind:str; payload:dict
 class EventStore:
-    def __init__(self): self._data={}; self._lock=RLock()
+    def __init__(self): self._data={}; self._lock=RLock(); self.lock=self._lock
+    def stream_version(self,stream):
+        """Current length of a stream (0 when unknown); safe under a held lock."""
+        with self._lock:return len(self._data.get(stream,[]))
     def append(self,stream,expected,kind,payload):
         with self._lock:
             rows=self._data.setdefault(stream,[])
